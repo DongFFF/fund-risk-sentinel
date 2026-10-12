@@ -9,7 +9,7 @@ description = "高校科研经费风险智能识别系统（桌面端）——�
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-authors = [{ name = "fund-risk-sentinel contributors" }]
+authors = [{ name = "陈东锋", email = "chen_es@cwu.edu.cn" }]
 keywords = ["research-fund", "risk-identification", "llm", "university", "internal-control"]
 classifiers = [
     "Development Status :: 3 - Alpha",
