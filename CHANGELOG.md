@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### 新增
+- **中英双版本 README**：`README.md`（英文，GitHub 默认展示）与 `README.zh-CN.md`（中文），
+  两版顶部互加语言切换入口；补充 Python / License / Platform / Checks / Data 徽章
+
 ### 计划中
 - 标准化风险标注数据集与人工复核结论回流机制
 - 向量检索（chromadb + 本地 embedding）替换关键词检索

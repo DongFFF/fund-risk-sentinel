@@ -1,69 +1,98 @@
 # fund-risk-sentinel
 
+**English** | [简体中文](README.zh-CN.md)
+
+> **Research Fund Risk Sentinel** — Desktop risk identification for university research funding
 > 高校科研经费风险智能识别系统（桌面端）
-> Research Fund Risk Sentinel — Desktop Risk Identification for University Research Funding
 
-一套面向高校科研经费**事前预警、事中拦截**场景的桌面应用：把报销单据、合同、发票、审批意见等非结构化材料上传进来，由**可自由配置的大模型**按「事项—规则—证据—风险—处置」五元关联框架完成审查，输出**可核验的风险线索**（风险等级 + 命中依据 + 关联材料 + 建议复核点），而不是替人下合规结论。
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-lightgrey)
+![Tests](https://img.shields.io/badge/checks-210%20passing-brightgreen)
+![Data](https://img.shields.io/badge/data-stays%20local-orange)
 
-程序可打包为 Windows 单文件 `exe`，开箱即用；模型 API 通过配置接入，**不写死任何厂商**。
+A desktop application for **pre-emptive warning and in-process interception** of risk in university research funding. Upload unstructured materials — reimbursement claims, contracts, invoices, approval notes — and a **freely configurable LLM** reviews them through an *Event → Rule → Evidence → Risk → Disposition* framework, producing **verifiable risk leads** (severity, matched basis, related materials, suggested review points) instead of making compliance rulings on anyone's behalf.
+
+Ships as a single-file Windows `exe`. Model APIs are configured, never hard-coded — **no vendor lock-in**.
 
 ---
 
-## 一、这个程序解决什么问题
+## Table of contents
 
-高校科研经费管理长期依赖「事后审计 + 人工抽查」，存在三个痛点：
+- [1. What problem does this solve](#1-what-problem-does-this-solve)
+- [2. Capability framework](#2-capability-framework)
+- [3. Quick start](#3-quick-start)
+- [4. Project layout](#4-project-layout)
+- [5. Data and security](#5-data-and-security)
+- [6. Development status](#6-development-status)
+- [7. Documentation](#7-documentation)
+- [8. License](#8-license)
 
-| 痛点 | 表现 | 本系统的应对 |
+---
+
+## 1. What problem does this solve
+
+University research funding management has long relied on **post-hoc audit plus manual sampling**. Three pain points follow:
+
+| Pain point | How it shows up | How this system responds |
 | --- | --- | --- |
-| 发现滞后 | 违规行为在结题审计时才暴露 | 把审查前移到报销/合同/预算节点之前 |
-| 制度规则分散 | 国家办法、负面清单、校内细则口径不一 | 制度知识库 + 规则引擎统一口径，命中即可回溯条款 |
-| 材料核验成本高 | 非结构化材料靠人逐份比对 | 大模型结构化抽取 + 跨材料一致性比对 |
+| **Late discovery** | Violations surface only at project-closing audit | Moves review upstream of reimbursement, contract and budget checkpoints |
+| **Fragmented rules** | National measures, negative lists and in-house rules disagree | A policy knowledge base plus a rule engine unify the wording; every hit traces back to a clause |
+| **Costly verification** | Unstructured materials are compared by hand, one by one | LLM-based structured extraction plus cross-material consistency checking |
 
-**定位边界**：模型只负责发现疑点、关联条款、生成可解释提示；复核判断、授权处置、例外认定始终由人承担。程序输出的永远是「待核验线索」，高风险或证据不足的事项会被明确标注。
+**Scope and boundaries.** The model only surfaces suspicions, links clauses and generates explainable prompts. Review judgement, authorised disposition and exception approval always remain with a human. The system output is *always* a **lead pending review**; high-risk items or those with insufficient evidence are flagged explicitly.
 
 ---
 
-## 二、能力框架（对应课题研究主线）
+## 2. Capability framework
 
-系统按课题提出的**三类核心能力**分层实现，三条能力链路各自独立、可单独替换：
-
-```
-①  材料理解与结构化抽取   ingest/ + extract/
-    识别项目、科目、金额、时间、供应商、审批角色；判断附件齐全性、字段一致性
-         ↓
-②  制度语义匹配与风险推理   rules/ + review/
-    材料 ↔ 制度条款/校内口径关联；识别科目不匹配、用途模糊、额度或时点异常、
-    合同与申请信息不一致、跨材料语义矛盾
-         ↓
-③  结果解释与证据定位       explain/
-    输出风险等级、命中依据、关联材料、建议复核点，可追溯到具体条款与材料
-```
-
-**五元关联框架**（贯穿数据模型）：
+The system implements the research project's **three core capabilities** as separate, independently replaceable layers:
 
 ```
-事项(Event) ── 规则(Rule) ── 证据(Evidence) ── 风险(Risk) ── 处置(Disposition)
-  预算/合同/     额度/用途/     申请单/合同/     缺失/冲突/      补充/退回/
-  报销/结算      程序/时点/     发票/审批意见   偏离/越权/      限制/会商/
-                 授权                           异常组合        放行留痕
+(1) Material understanding & structured extraction     ingest/ + extract/
+    Identify project, account, amount, date, vendor, approving role;
+    check attachment completeness and field consistency
+         |
+         v
+(2) Policy semantic matching & risk reasoning          rules/ + review/
+    Link materials to policy clauses and in-house rules; detect account
+    mismatch, vague purpose, amount or timing anomalies, contract-vs-claim
+    inconsistency, and cross-material semantic contradictions
+         |
+         v
+(3) Result explanation & evidence localisation         explain/
+    Output severity, matched basis, related materials and suggested review
+    points, all traceable to a specific clause and material
 ```
 
-**四条适配路径**（对应现实约束下的技术配置）：
+**The five-element framework** (threaded through the data model):
 
-| 路径 | 适用场景 | 本系统落点 |
+```
+Event ────── Rule ──────── Evidence ─────── Risk ────────── Disposition
+Budget/      Amount/        Claim/          Missing/       Supplement/
+Contract/    Purpose/       Contract/       Conflict/      Return/
+Reimburse/   Procedure/     Invoice/        Deviation/     Restrict/
+Settlement   Timing/        Approval        Excess         Consult/
+             Authority      notes           authority      Release
+                                                        with trace
+```
+
+**Four adaptation paths** (technical options under real-world constraints):
+
+| Path | Fits when | Where it lives |
 | --- | --- | --- |
-| 结构化规则 + 知识检索 | 制度口径清晰稳定 | `rules/engine.py` + `rules/knowledge_base.py` |
-| 检索增强生成（RAG） | 需制度依据支撑 | `rules/knowledge_base.py` 检索 → 注入提示模板 |
-| 提示模板与指令工程 | 需快速验证能力边界 | `prompts/` |
-| 参数高效微调（LoRA/QLoRA） | 需领域术语与情境适配 | `llm/` 中指向本地微调模型的 OpenAI 兼容端点 |
+| Structured rules + knowledge retrieval | Policy wording is clear and stable | `rules/engine.py` + `rules/knowledge_base.py` |
+| Retrieval-augmented generation (RAG) | Decisions need policy grounding | `rules/knowledge_base.py` retrieval → injected into prompt templates |
+| Prompt templates & instruction engineering | Capability boundaries need fast validation | `prompts/` |
+| Parameter-efficient fine-tuning (LoRA/QLoRA) | Domain terminology and context need adaptation | OpenAI-compatible endpoint in `llm/` pointing at a locally fine-tuned model |
 
 ---
 
-## 三、快速开始
+## 3. Quick start
 
-### 3.1 环境
+### 3.1 Requirements
 
-- Windows 10/11（macOS / Linux 亦可运行，打包脚本以 Windows 为主）
+- Windows 10/11 (macOS and Linux also run; the packaging script targets Windows)
 - Python 3.11+
 
 ```bash
@@ -77,16 +106,16 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-### 3.2 配置模型
+### 3.2 Configure a model
 
-复制配置模板，填入你自己的 API Key（**配置文件已被 .gitignore 排除，不会上传**）：
+Copy the templates and fill in your own API key (**config files are excluded by `.gitignore` and never uploaded**):
 
 ```bash
 cp config/settings.example.yaml config/settings.yaml
 cp config/providers.example.yaml config/providers.yaml
 ```
 
-编辑 `config/providers.yaml`，例如接入 DeepSeek：
+Edit `config/providers.yaml` — here, wiring up DeepSeek:
 
 ```yaml
 active: deepseek
@@ -98,109 +127,115 @@ providers:
     model: deepseek-chat
 ```
 
-也支持直接读环境变量，或在本机跑 Ollama / vLLM 完全离线使用（见 `docs/03-接口规范.md`）。
+Environment variables are read directly, and Ollama / vLLM on the local machine gives you a fully offline setup (see `docs/03-接口规范.md`).
 
-### 3.3 启动
+> No API key at all? The bundled `mock` provider runs the entire pipeline deterministically offline, so you can try the system before configuring anything.
+
+### 3.3 Run it
 
 ```bash
-# 图形界面
+# Graphical interface
 python run.py
 
-# 命令行冒烟测试（不联网，走内置 mock 模型，验证全链路）
+# Command-line smoke test (offline, uses the built-in mock model, exercises the whole chain)
 python scripts/smoke_test.py
 
-# 界面无头冒烟测试（不弹窗，验证 7 个页面能否构造与刷新）
+# Headless UI smoke test (no window; checks all 7 pages construct and refresh)
 python scripts/ui_smoke_test.py
 
-# 用真实模型跑一份样例材料
+# Run a sample material through a real model
 python examples/run_review_demo.py --file examples/样例-差旅报销单.txt
 ```
 
-### 3.4 打包为 exe
+### 3.4 Build the exe
 
 ```bash
 pip install -r requirements-dev.txt
 python scripts/build_exe.py
-# 产物：dist/FundRiskSentinel.exe
+# Output: dist/FundRiskSentinel.exe
 ```
 
 ---
 
-## 四、目录结构
+## 4. Project layout
 
 ```
 fund-risk-sentinel/
-├── run.py                       # 桌面端入口
-├── config/                      # 配置（示例入库，真实配置不入库）
+├── run.py                       # Desktop entry point
+├── config/                      # Configuration (examples committed, real config never)
 │   ├── settings.example.yaml
 │   ├── providers.example.yaml
-│   ├── rules/                   # 风险规则库（YAML）
-│   └── knowledge/               # 制度知识库语料
-├── docs/                        # 需求 / 架构 / 接口 / 数据模型 / 评测 / 路线图
+│   ├── rules/                   # Risk rule base (YAML)
+│   └── knowledge/               # Policy knowledge base corpus
+├── docs/                        # Requirements / architecture / interfaces / data model / evaluation / roadmap
 ├── src/fund_risk_sentinel/
-│   ├── core/                    # 领域模型：事项·规则·证据·风险·处置
-│   ├── config/                  # 配置加载与校验
-│   ├── llm/                     # 模型 API 统一接入层（可插拔）
-│   ├── ingest/                  # 材料上传与解析（pdf/docx/xlsx/csv/img/txt）
-│   ├── extract/                 # 能力①：结构化抽取
-│   ├── rules/                   # 规则引擎 + 制度知识库
-│   ├── review/                  # 能力②：审查主流程编排
-│   ├── explain/                 # 能力③：解释与证据定位
-│   ├── evaluate/                # 六维评测指标
-│   ├── storage/                 # SQLite 存储 + 审计日志
-│   └── ui/                      # PySide6 界面
+│   ├── core/                    # Domain model: Event · Rule · Evidence · Risk · Disposition
+│   ├── config/                  # Config loading and validation
+│   ├── llm/                     # Unified, pluggable model API layer
+│   ├── ingest/                  # Material upload and parsing (pdf/docx/xlsx/csv/img/txt)
+│   ├── extract/                 # Capability (1): structured extraction
+│   ├── rules/                   # Rule engine + policy knowledge base
+│   ├── review/                  # Capability (2): review pipeline orchestration
+│   ├── explain/                 # Capability (3): explanation and evidence localisation
+│   ├── evaluate/                # Six-dimension evaluation metrics
+│   ├── storage/                 # SQLite storage + audit log
+│   └── ui/                      # PySide6 interface
 ├── tests/                       # pytest
-├── examples/                    # 样例材料与演示脚本
-└── scripts/                     # 冒烟测试 / 建库 / 打包
+├── examples/                    # Sample materials and demo scripts
+└── scripts/                     # Smoke tests / database init / packaging
 ```
 
 ---
 
-## 五、数据与安全
+## 5. Data and security
 
-- **数据不出本地**：所有材料、审查结果、审计日志默认只写入本机 `data/` 目录（SQLite + 文件）。
-- **最小必要**：上传时即记录数据来源、字段口径与脱敏状态；`ingest/` 提供脱敏钩子。
-- **可追溯**：每条风险线索都保留「材料 → 条款 → 模型版本 → 输出 → 人工调整」的完整链路。
-- **密钥不入库**：`.gitignore` 已排除 `config/settings.yaml`、`config/providers.yaml`、`.env`、`data/`、`*.log`。
+- **Data never leaves the machine.** All materials, review results and audit logs are written only to the local `data/` directory (SQLite plus files).
+- **Minimum necessary.** Data provenance, field definitions and redaction status are recorded at upload time; `ingest/` exposes redaction hooks.
+- **Traceable.** Every risk lead retains the full chain: material → clause → model version → output → human adjustment.
+- **No secrets in the repo.** `.gitignore` excludes `config/settings.yaml`, `config/providers.yaml`, `.env`, `data/` and `*.log`.
+
+The audit log uses a **hash chain** (`entry_hash = sha256(prev_hash + …)`), so `verify_chain()` pinpoints exactly which record was tampered with rather than merely reporting that tampering occurred.
 
 ---
 
-## 六、开发状态
+## 6. Development status
 
-| 模块 | 状态 |
+| Module | Status |
 | --- | --- |
-| 领域模型（五元框架） | ✅ 已完成 |
-| 模型 API 统一接入层 | ✅ 已完成（OpenAI 兼容 / Anthropic / Gemini / Mock） |
-| 材料上传与解析接口 | ✅ 已完成（8 种格式） |
-| 规则引擎与制度知识库 | ✅ 已完成（31 条内置规则 + 40 条制度条款） |
-| 审查主流程编排 | ✅ 已完成（6 阶段，阶段级降级） |
-| 存储层与审计日志 | ✅ 已完成（哈希链防篡改） |
-| 六维评测模块 | ✅ 已完成 |
-| 桌面界面（PySide6） | ✅ 已完成（7 个页面） |
-| 自动化测试 | ✅ 158 项 pytest + 35 项离线冒烟 + 17 项界面冒烟，全部通过 |
-| exe 打包 | 🔧 打包脚本已就绪，待实机验证 |
-| 标准化数据集 | ⏳ 待建（当前所有数据先经大模型审查，逐步沉淀为标注语料） |
+| Domain model (five-element framework) | ✅ Done |
+| Unified model API layer | ✅ Done (OpenAI-compatible / Anthropic / Gemini / Mock) |
+| Material upload and parsing interfaces | ✅ Done (8 formats) |
+| Rule engine and policy knowledge base | ✅ Done (31 built-in rules + 40 policy clauses) |
+| Review pipeline orchestration | ✅ Done (6 stages, per-stage degradation) |
+| Storage layer and audit log | ✅ Done (tamper-evident hash chain) |
+| Six-dimension evaluation module | ✅ Done |
+| Desktop interface (PySide6) | ✅ Done (7 pages) |
+| Automated tests | ✅ 158 pytest + 35 offline smoke + 17 UI smoke, all passing |
+| exe packaging | 🔧 Packaging script ready, pending on-machine verification |
+| Standardised dataset | ⏳ To be built (all data currently passes through LLM review first, accumulating into annotated corpora) |
 
-详细路线见 `docs/07-开发路线图.md`。
+See `docs/07-开发路线图.md` for the detailed roadmap.
 
 ---
 
-## 七、文档索引
+## 7. Documentation
 
-| 文档 | 内容 |
+> The design documents are currently written in Chinese. English translations are on the roadmap — contributions welcome.
+
+| Document | Contents |
 | --- | --- |
-| [01-需求与课题背景](docs/01-需求与课题背景.md) | 痛点、三类核心能力、五元框架、定位边界 |
-| [02-系统架构](docs/02-系统架构.md) | 分层、六阶段流水线、可插拔模型层、安全沙箱 |
-| [03-接口规范](docs/03-接口规范.md) | 模型接入、上传接口、规则库与知识库格式、Python API |
-| [04-数据模型](docs/04-数据模型.md) | 领域模型字段与设计取舍 |
-| [05-评测方案](docs/05-评测方案.md) | 六维指标口径、阈值、样本量披露 |
-| [06-安全与合规](docs/06-安全与合规.md) | 责任边界、脱敏、审计链、密钥管理 |
-| [07-开发路线图](docs/07-开发路线图.md) | 已完成 / 近期 / 中期 / 后期规划 |
+| [01-需求与课题背景](docs/01-需求与课题背景.md) | Pain points, three core capabilities, five-element framework, scope boundaries |
+| [02-系统架构](docs/02-系统架构.md) | Layering, six-stage pipeline, pluggable model layer, evaluation sandbox |
+| [03-接口规范](docs/03-接口规范.md) | Model integration, upload interfaces, rule and knowledge base formats, Python API |
+| [04-数据模型](docs/04-数据模型.md) | Domain model fields and design trade-offs |
+| [05-评测方案](docs/05-评测方案.md) | Six-dimension metric definitions, thresholds, sample-size disclosure |
+| [06-安全与合规](docs/06-安全与合规.md) | Responsibility boundaries, redaction, audit chain, key management |
+| [07-开发路线图](docs/07-开发路线图.md) | Completed / near-term / mid-term / long-term plans |
 
 ---
 
-## 八、许可
+## 8. License
 
-本项目采用 MIT License，详见 [LICENSE](LICENSE)。
+Released under the MIT License — see [LICENSE](LICENSE).
 
-课题相关信息见 `docs/01-需求与课题背景.md`。
+Research project background is documented in `docs/01-需求与课题背景.md`.
