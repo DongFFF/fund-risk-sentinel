@@ -1,0 +1,111 @@
+# 模型服务配置 —— 程序不绑定任何厂商，按需增删
+#
+# type 取值：
+#   openai_compatible —— 任何兼容 OpenAI /chat/completions 的服务
+#                        （DeepSeek、通义千问、Kimi、智谱、OpenAI、Ollama、vLLM、LM Studio…）
+#   anthropic         —— Claude 系列
+#   gemini            —— Google Gemini
+#   mock              —— 离线模拟，用于无网络自检
+#
+# api_key 支持 ${ENV_VAR} 写法，推荐把 Key 放进系统环境变量，不要写进本文件。
+
+active: mock
+fallback: []
+
+providers:
+
+  # ---------------- 离线自检（默认激活） ----------------
+  mock:
+    type: mock
+    model: mock-rules-v1
+    description: 离线模拟模型（不联网，用于演示与自检）
+    is_local: true
+
+  # ---------------- DeepSeek ----------------
+  deepseek:
+    type: openai_compatible
+    enabled: false
+    base_url: https://api.deepseek.com/v1
+    api_key: ${DEEPSEEK_API_KEY}
+    model: deepseek-chat
+    temperature: 0.1
+    max_tokens: 4096
+    timeout: 120
+    supports_json_mode: true
+    description: DeepSeek（性价比高，中文财务语境表现好）
+    adaptation_path: prompt
+
+  # ---------------- 通义千问（阿里云百炼） ----------------
+  qwen:
+    type: openai_compatible
+    enabled: false
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api_key: ${DASHSCOPE_API_KEY}
+    model: qwen-plus
+    description: 通义千问（国内合规，支持长上下文）
+    adaptation_path: rag
+
+  # ---------------- Kimi（月之暗面） ----------------
+  kimi:
+    type: openai_compatible
+    enabled: false
+    base_url: https://api.moonshot.cn/v1
+    api_key: ${MOONSHOT_API_KEY}
+    model: moonshot-v1-32k
+    description: Kimi（长文档处理能力强）
+
+  # ---------------- 智谱 GLM ----------------
+  zhipu:
+    type: openai_compatible
+    enabled: false
+    base_url: https://open.bigmodel.cn/api/paas/v4
+    api_key: ${ZHIPU_API_KEY}
+    model: glm-4-plus
+    description: 智谱 GLM
+
+  # ---------------- OpenAI ----------------
+  openai:
+    type: openai_compatible
+    enabled: false
+    base_url: https://api.openai.com/v1
+    api_key: ${OPENAI_API_KEY}
+    model: gpt-4o-mini
+    description: OpenAI（境外服务，注意数据合规）
+
+  # ---------------- Anthropic Claude ----------------
+  claude:
+    type: anthropic
+    enabled: false
+    api_key: ${ANTHROPIC_API_KEY}
+    model: claude-3-5-sonnet-latest
+    description: Anthropic Claude（境外服务，注意数据合规）
+
+  # ---------------- Google Gemini ----------------
+  gemini:
+    type: gemini
+    enabled: false
+    api_key: ${GEMINI_API_KEY}
+    model: gemini-1.5-pro
+    description: Google Gemini（境外服务，注意数据合规）
+
+  # ---------------- 本地 Ollama（数据不出本机） ----------------
+  ollama:
+    type: openai_compatible
+    enabled: false
+    base_url: http://127.0.0.1:11434/v1
+    api_key: ollama
+    model: qwen2.5:7b-instruct
+    is_local: true
+    description: 本地 Ollama（材料完全不出本机）
+    adaptation_path: peft
+
+  # ---------------- 本地 vLLM / 微调模型 ----------------
+  local_finetuned:
+    type: openai_compatible
+    enabled: false
+    base_url: http://127.0.0.1:8000/v1
+    api_key: EMPTY
+    model: fund-risk-lora-qwen2.5-7b
+    is_local: true
+    description: 本地 LoRA/QLoRA 微调模型（课题四路径之参数高效微调）
+    adaptation_path: peft

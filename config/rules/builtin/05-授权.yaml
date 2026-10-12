@@ -1,0 +1,70 @@
+# 规则库：授权维度
+version: "1.0"
+source: builtin
+dimension: authority
+tags: [授权, 审批权限]
+
+rules:
+
+  - id: ATH-001
+    name: 超出审批权限未上报
+    event_types: [reimbursement, contract, procurement, transfer]
+    condition: 'amount >= 100000 and contains_any(approver_level, "学院", "二级单位") and not contains_any(approver_level, "科研处", "财务处", "校领导", "分管")'
+    requirement: 达到规定金额标准的支出应当由相应层级审批，不得由低层级单独审批。
+    risk_category: override
+    level_hint: high
+    disposition_hint: return
+    suggestion: 核对本单位分级授权标准，确认该笔支出应履行的审批层级，必要时重新履行审批程序。
+    weight: 1.7
+    basis:
+      - doc_title: 财政部关于进一步加强科学事业单位内部控制建设的指导意见
+        article: 分级授权
+        text: 单位应当建立分级授权审批制度，明确各层级审批权限，重大事项应当由单位领导集体决策。
+      - doc_title: 国家自然科学基金资助项目资金管理办法
+        doc_no: 财教〔2021〕177 号
+        text: 依托单位应当完善内部控制和监督制约机制，明确审批权限与责任。
+
+  - id: ATH-002
+    name: 审批人与经办人为同一人
+    event_types: [reimbursement, advance]
+    condition: 'not is_empty(applicant) and not is_empty(approver) and applicant == approver'
+    requirement: 经办与审批属不相容岗位，应当相互分离。
+    risk_category: override
+    level_hint: high
+    disposition_hint: return
+    suggestion: 核实是否确为同一人；不相容岗位未分离的，应调整办理人员并完善控制措施。
+    weight: 1.8
+    basis:
+      - doc_title: 财政部关于进一步加强科学事业单位内部控制建设的指导意见
+        article: 不相容岗位分离
+        text: 单位应当合理设置岗位，明确职责权限，确保不相容岗位相互分离、相互制约、相互监督。
+
+  - id: ATH-003
+    name: 项目负责人自行审批本人支出
+    event_types: [reimbursement]
+    condition: 'contains_any(text, "项目负责人本人", "负责人自行报销", "本人审批本人")'
+    requirement: 项目负责人本人的支出应当由上级或财务部门审批。
+    risk_category: override
+    level_hint: medium
+    disposition_hint: consult
+    suggestion: 核实审批人身份，确认是否履行了回避要求。
+    weight: 1.3
+    basis:
+      - doc_title: 财政部关于进一步加强科学事业单位内部控制建设的指导意见
+        article: 内部监督
+        text: 单位应当建立内部控制监督制度，对内部控制的有效性进行监督检查。
+
+  - id: ATH-004
+    name: 外拨转拨缺少审批或协议
+    event_types: [transfer]
+    condition: 'not has_approval or not has_contract'
+    requirement: 外拨转拨经费应当签订合作协议并履行审批程序。
+    risk_category: missing
+    level_hint: high
+    disposition_hint: supplement
+    suggestion: 补充合作协议与外拨审批材料；无协议的外拨不得办理。
+    weight: 1.6
+    basis:
+      - doc_title: 国家自然科学基金资助项目资金管理办法
+        doc_no: 财教〔2021〕177 号
+        text: 合作研究资金应当按照合作协议约定转拨，并加强对外拨资金的监督管理。

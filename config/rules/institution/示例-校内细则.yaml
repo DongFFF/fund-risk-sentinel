@@ -1,0 +1,44 @@
+# 本单位（校内）细则示例
+#
+# 使用方法：
+#   1. 复制本文件到同目录，改名为你单位的名称，例如「XX大学报销细则.yaml」；
+#   2. 修改 rule_id 与条件，条件表达式语法见 src/fund_risk_sentinel/rules/engine.py；
+#   3. rule_id 与内置规则相同时，本目录的规则会覆盖内置规则（校内口径优先）。
+#
+# 建议：本校细则不要提交到公开仓库（本目录已加入 .gitignore 的排除范围之外，
+#       如涉及内部口径请自行在 .gitignore 中排除）。
+
+version: "1.0"
+source: institution
+
+rules:
+
+  - id: INST-001
+    name: 差旅费超出本校标准
+    dimension: amount
+    event_types: [reimbursement]
+    condition: 'contains_any(purpose, "差旅", "出差", "交通", "住宿") and amount > 8000'
+    requirement: 差旅费报销应当符合本校差旅费管理办法规定的标准。
+    risk_category: deviation
+    level_hint: medium
+    disposition_hint: consult
+    suggestion: 对照本校差旅费管理办法核对标准，超标准的应说明原因或按标准核减。
+    basis:
+      - doc_title: XX大学差旅费管理办法
+        article: 第十五条
+        text: （请替换为本校制度原文）
+
+  - id: INST-002
+    name: 单笔支出达到校级审批标准
+    dimension: authority
+    event_types: [reimbursement, contract, procurement]
+    condition: 'amount >= 200000'
+    requirement: 单笔金额达到 20 万元的支出，应当报分管校领导审批。
+    risk_category: override
+    level_hint: high
+    disposition_hint: return
+    suggestion: 核对审批层级是否达到校级标准，未达到的应重新履行审批程序。
+    basis:
+      - doc_title: XX大学经费支出审批办法
+        article: 第八条
+        text: （请替换为本校制度原文）

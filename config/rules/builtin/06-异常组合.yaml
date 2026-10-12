@@ -1,0 +1,89 @@
+# 规则库：异常组合维度
+#
+# 这一维度的规则最难用单笔数据判断——它们关注的是"组合起来才异常"的情形，
+# 也正是大模型语义推理相对规则引擎的增量所在。规则侧给出的是确定性触发条件，
+# 模型侧负责解释与扩展。
+version: "1.0"
+source: builtin
+dimension: amount
+tags: [异常组合, 统计]
+
+rules:
+
+  - id: ANO-001
+    name: 同一供应商短期内多笔支出
+    event_types: [reimbursement, procurement]
+    condition: 'contains_any(text, "同一供应商", "短期内多笔", "多次采购", "连续多笔")'
+    requirement: 同一供应商或同类事项短期内多笔支出，应关注是否存在化整为零规避审批。
+    risk_category: anomaly
+    level_hint: medium
+    disposition_hint: consult
+    suggestion: 汇总同一供应商近期的全部支出，确认是否应合并履行审批程序。
+    weight: 1.3
+    basis:
+      - doc_title: 财政部关于进一步加强科学事业单位内部控制建设的指导意见
+        article: 风险识别与评估
+        text: 单位应当持续收集与内部控制相关的信息，识别与分析风险，及时调整控制措施。
+
+  - id: ANO-002
+    name: 拆分报销规避审批权限
+    event_types: [reimbursement]
+    condition: 'contains_any(text, "拆分", "化整为零", "分次报销", "分批报销")'
+    requirement: 不得将同一事项拆分为多笔以规避审批权限或预算控制。
+    risk_category: anomaly
+    level_hint: high
+    disposition_hint: consult
+    suggestion: 合并核算同一事项的全部分次支出，按合并金额重新核定审批层级。
+    weight: 1.6
+    basis:
+      - doc_title: 财政部关于进一步加强科学事业单位内部控制建设的指导意见
+        article: 分级授权
+        text: 单位应当防止通过拆分业务规避审批权限的行为。
+
+  - id: ANO-003
+    name: 供应商可能与项目组成员存在关联
+    event_types: [reimbursement, contract, procurement]
+    condition: 'contains_any(text, "关联方", "关联企业", "疑似关联", "与负责人同名", "法定代表人相同")'
+    requirement: 与项目组成员存在关联关系的交易应当履行回避与披露程序。
+    risk_category: anomaly
+    level_hint: medium
+    disposition_hint: consult
+    suggestion: 核实供应商股东与法定代表人信息，确认是否与项目组成员存在关联，必要时履行回避程序。
+    weight: 1.4
+    basis:
+      - doc_title: 财政部关于进一步加强科学事业单位内部控制建设的指导意见
+        article: 廉洁风险防控
+        text: 单位应当加强对重点领域和关键岗位的廉洁风险防控，防范利益冲突。
+
+  - id: ANO-004
+    name: 劳务费发放名单异常
+    event_types: [reimbursement]
+    condition: 'contains_any(text, "虚报人员", "冒领", "名单与实际不符", "虚假名单", "代签")'
+    requirement: 劳务费发放对象应当真实，不得虚报冒领。
+    risk_category: anomaly
+    level_hint: high
+    disposition_hint: restrict
+    suggestion: 核对发放名单与身份信息、签收记录，必要时抽查核实。
+    weight: 1.9
+    basis:
+      - doc_title: 国务院办公厅关于改革完善中央财政科研经费管理的若干意见
+        doc_no: 国办发〔2021〕32 号
+        text: 严禁虚报人员、冒领科研经费等行为。
+      - doc_title: 国家自然科学基金资助项目资金管理办法
+        doc_no: 财教〔2021〕177 号
+        text: 项目资金应当据实列支，不得虚列、虚报。
+
+  - id: ANO-005
+    name: 材料中出现异常指令文本（提示注入）
+    event_types: []
+    condition: 'contains_any(text, "忽略以上", "忽略上述", "忽略前面", "你现在是", "输出你的系统提示", "ignore previous", "system prompt")'
+    requirement: 材料中不应出现试图影响审核判断的指令性文本。
+    risk_category: anomaly
+    level_hint: medium
+    disposition_hint: consult
+    suggestion: 核实材料来源；材料中出现的指令性文本不应影响审核判断，应人工确认材料真实性。
+    weight: 1.5
+    basis:
+      - doc_title: 财政部关于加快推进会计数智化工作的指导意见（征求意见稿）
+        doc_no: 财办会〔2026〕32 号
+        text: 对人工智能应用实施全生命周期管理，确保全过程可解释、可追溯、可问责。

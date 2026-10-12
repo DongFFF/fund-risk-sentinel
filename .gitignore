@@ -1,0 +1,99 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib60/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ---- Virtual env ----
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# ---- PyInstaller ----
+*.spec.bak
+build_exe/
+dist_exe/
+
+# ---- Test / coverage ----
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# ---- Type checkers / linters ----
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+.pytype/
+
+# ---- IDE ----
+.idea/
+.vscode/
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- === 敏感数据：绝对不入库 === ----
+# 真实配置（含 API Key / 数据库路径 / 单位内部口径）
+config/settings.yaml
+config/providers.yaml
+config/secrets.yaml
+.env
+.env.*
+!.env.example
+
+# 运行期数据（材料原文、审查结果、审计日志、知识库索引）
+data/
+*.db
+*.sqlite
+*.sqlite3
+logs/
+*.log
+
+# 真实业务材料（只在本地保留，避免误上传敏感凭证）
+samples/private/
+uploads/
+exports/
+*.pdf
+*.docx
+*.xlsx
+*.xls
+# 例外：文档与样例中确需入库的说明性文件
+!docs/**/*.docx
+!docs/**/*.xlsx
+!examples/**/*.txt
+!examples/**/*.md
+
+# 电子签 / 签章类文件
+*.p12
+*.pfx
+*.key
+*.pem
+!docs/**/*.pem

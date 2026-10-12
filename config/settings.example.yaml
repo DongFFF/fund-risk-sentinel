@@ -1,0 +1,52 @@
+# 高校科研经费风险智能识别系统 —— 应用设置
+# 说明：本文件为示例模板。实际使用时复制为 settings.yaml 后再修改。
+# 带 ${VAR} 的写法会读取同名环境变量，避免把敏感信息写进文件。
+
+app_name: 高校科研经费风险智能识别系统
+app_version: "0.1.0"
+
+# 留空表示使用系统用户数据目录（Windows: %LOCALAPPDATA%\FundRiskSentinel）
+data_dir: ""
+db_path: ""
+log_dir: ""
+rules_dir: ""
+knowledge_dir: ""
+export_dir: ""
+
+ui:
+  theme: light
+  language: zh-CN
+  page_size: 50
+  show_raw_json: false
+  font_size: 10
+
+review:
+  # 留空则使用 providers.yaml 中的 active
+  default_provider: ""
+  max_materials_per_task: 50
+  max_chars_per_material: 60000
+  total_prompt_char_budget: 240000
+  enable_rule_engine: true
+  enable_rag: true
+  enable_llm_reasoning: true
+  rag_top_k: 6
+  # 治理边界：强制把输出标记为待人工复核，程序不下合规结论
+  require_human_review: true
+  min_confidence_to_report: 0.35
+  # 模型不可用时降级为纯规则结果，并在结论中明确标注
+  degrade_on_llm_failure: true
+  temperature: 0.1
+  max_tokens: 4096
+
+security:
+  # 设为 false 则只允许本地模型（材料不出本机）
+  allow_cloud_providers: true
+  redact_id_card: true
+  redact_phone: true
+  redact_bank_account: true
+  redact_email: true
+  redact_person_name: false
+  retention_days: 1825
+  audit_log_enabled: true
+  data_classification: 内部
+  mask_api_key_in_ui: true

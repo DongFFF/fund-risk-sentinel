@@ -1,0 +1,98 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fund-risk-sentinel"
+version = "0.1.0"
+description = "高校科研经费风险智能识别系统（桌面端）——轻量化大模型驱动的事前风险预警与拦截"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "fund-risk-sentinel contributors" }]
+keywords = ["research-fund", "risk-identification", "llm", "university", "internal-control"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Win32 (MS Windows)",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: Chinese (Simplified)",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial :: Accounting",
+]
+
+dependencies = [
+    "PySide6>=6.6,<7",
+    "pydantic>=2.6,<3",
+    "PyYAML>=6.0",
+    "httpx>=0.27",
+    "python-docx>=1.1",
+    "openpyxl>=3.1",
+    "pypdf>=4.0",
+    "PyMuPDF>=1.24",
+    "Pillow>=10.0",
+]
+
+[project.optional-dependencies]
+rag = ["chromadb>=0.5"]
+dev = ["pyinstaller>=6.5", "pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.4", "mypy>=1.10"]
+
+[project.scripts]
+fund-risk-sentinel = "fund_risk_sentinel.app:main"
+
+[project.urls]
+Homepage = "https://github.com/<your-name>/fund-risk-sentinel"
+Issues = "https://github.com/<your-name>/fund-risk-sentinel/issues"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+fund_risk_sentinel = ["ui/resources/*", "**/*.yaml", "**/*.json"]
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RET"]
+ignore = [
+    "E501",   # 行长由 formatter 控制
+    "B008",   # 允许函数默认参数调用（配置对象惯用法）
+    "SIM108", # 三元表达式可读性优先
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+"examples/*" = ["T201"]
+"scripts/*" = ["T201"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+# ---------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q --strict-markers"
+markers = [
+    "network: 需要真实网络/API Key 的测试（默认跳过）",
+    "slow: 耗时较长的测试",
+]
+
+# ---------------------------------------------------------------- mypy
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+packages = ["fund_risk_sentinel"]
+warn_unused_configs = true
+ignore_missing_imports = true
+disallow_untyped_defs = false
+check_untyped_defs = true

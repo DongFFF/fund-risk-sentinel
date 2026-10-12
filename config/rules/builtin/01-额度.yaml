@@ -1,0 +1,92 @@
+# 规则库：额度维度
+#
+# 说明：
+# - condition 为受限 Python 表达式（见 rules/engine.py 的安全求值器），可用变量见该模块文档。
+# - event_types 留空表示适用于全部事项类型。
+# - 本文件是"内置通用规则"，本校细则请放到 ../institution/ 目录，
+#   同名 rule_id 时校内规则会覆盖内置规则。
+version: "1.0"
+source: builtin
+dimension: amount
+tags: [额度, 预算]
+
+rules:
+
+  - id: AMT-001
+    name: 单笔支出超出预算科目余额
+    event_types: [reimbursement, advance, procurement, transfer]
+    condition: 'amount > budget_amount and budget_amount > 0'
+    requirement: 支出金额不得超过对应预算科目的可用余额。
+    risk_category: deviation
+    level_hint: high
+    disposition_hint: restrict
+    suggestion: 核对预算科目余额；确需超支的，应先办理预算调整或说明资金来源。
+    weight: 1.5
+    basis:
+      - doc_title: 国家自然科学基金资助项目资金管理办法
+        doc_no: 财教〔2021〕177 号
+        article: 第二十二条
+        text: 项目资金应当严格按照批准的预算执行，不得擅自调整、挤占、挪用。
+      - doc_title: 国务院办公厅关于改革完善中央财政科研经费管理的若干意见
+        doc_no: 国办发〔2021〕32 号
+        text: 项目承担单位应当完善内部控制和监督制约机制，对项目资金使用情况进行动态监管。
+
+  - id: AMT-002
+    name: 报销金额与合同金额不一致
+    event_types: [reimbursement]
+    condition: 'has_contract and contract_amount > 0 and amount > 0 and abs(amount - contract_amount) > max(1, contract_amount * 0.01)'
+    requirement: 报销金额应当与合同约定金额一致；存在差异的应有变更协议或说明。
+    risk_category: conflict
+    level_hint: high
+    disposition_hint: consult
+    suggestion: 核对合同金额与本次报销金额的差异原因，确认是否存在补充协议或分期付款安排。
+    weight: 1.4
+    basis:
+      - doc_title: 财政部关于进一步加强科学事业单位内部控制建设的指导意见
+        article: 业务层面内部控制
+        text: 单位应当对合同履行、验收与结算环节实施控制，确保支出与合同约定一致。
+
+  - id: AMT-003
+    name: 单笔支出金额接近审批权限阈值
+    event_types: [reimbursement, procurement, contract]
+    condition: 'amount >= 48000 and amount < 50000'
+    requirement: 单笔金额接近审批权限临界值的，应重点核查是否存在化整为零规避审批的情形。
+    risk_category: anomaly
+    level_hint: medium
+    disposition_hint: consult
+    suggestion: 核查该笔支出是否为同一事项的拆分；如属拆分，应按合并金额重新履行审批程序。
+    weight: 1.2
+    basis:
+      - doc_title: 财政部关于进一步加强科学事业单位内部控制建设的指导意见
+        article: 分级授权
+        text: 单位应当建立分级授权审批制度，明确各层级审批权限，防止超越权限办理业务。
+
+  - id: AMT-004
+    name: 材料中出现多处不一致的金额
+    event_types: [reimbursement, contract, settlement]
+    condition: 'not is_empty(fields.get("amount_all", ""))'
+    requirement: 同一事项的不同材料金额应当一致，出现多处不同金额时应逐项核对。
+    risk_category: conflict
+    level_hint: medium
+    disposition_hint: return
+    suggestion: 逐项核对发票、报销单与合同的金额字段，确认差异原因。
+    weight: 1.0
+    basis:
+      - doc_title: 中华人民共和国会计法
+        article: 第九条
+        text: 各单位必须根据实际发生的经济业务事项进行会计核算，填制会计凭证，登记会计账簿。
+
+  - id: AMT-005
+    name: 预算科目金额缺失导致无法核对
+    event_types: [reimbursement, advance]
+    condition: 'amount > 0 and budget_amount <= 0'
+    requirement: 应能获取对应预算科目的额度或余额，否则无法判断支出是否在预算范围内。
+    risk_category: missing
+    level_hint: unknown
+    disposition_hint: supplement
+    suggestion: 补充预算科目余额信息，或提供项目预算书以便核对。
+    weight: 0.8
+    basis:
+      - doc_title: 国务院办公厅关于改革完善中央财政科研经费管理的若干意见
+        doc_no: 国办发〔2021〕32 号
+        text: 项目承担单位应当加强预算管理，及时掌握项目资金执行情况。

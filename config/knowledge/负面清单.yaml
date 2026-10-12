@@ -1,0 +1,53 @@
+# 知识库：结构化条款（YAML 格式样例）
+#
+# 与 Markdown 格式相比，YAML 格式可以显式指定文号、条款号、施行日期与关键词，
+# 检索精度更高。适合把"负面清单""禁止性行为清单"这类短条款录入。
+#
+# tags 与 keywords 会参与检索加权：查询中出现这些词时，本条命中概率提高。
+
+doc_title: 科研经费使用负面清单
+doc_no: 校内制度样例
+effective_date: "2026-01-01"
+tags: [负面清单, 禁止性行为]
+
+clauses:
+
+  - clause_id: neg-001
+    article: 一
+    text: 不得编报虚假预算，不得虚列、虚报项目支出。
+    keywords: [虚假预算, 虚列, 虚报]
+
+  - clause_id: neg-002
+    article: 二
+    text: 不得签订虚假合同，不得以虚构事项套取项目资金。
+    keywords: [虚假合同, 虚构事项, 套取]
+
+  - clause_id: neg-003
+    article: 三
+    text: 不得报销虚假票据，不得使用与实际业务不符的发票。
+    keywords: [虚假票据, 发票不符]
+
+  - clause_id: neg-004
+    article: 四
+    text: 不得虚报人员冒领劳务费，不得代签、代领人员费用。
+    keywords: [虚报人员, 冒领, 劳务费]
+
+  - clause_id: neg-005
+    article: 五
+    text: 不得将项目资金用于与本项目研究无关的支出。
+    keywords: [无关支出, 用途]
+
+  - clause_id: neg-006
+    article: 六
+    text: 不得将同一事项拆分为多笔支出以规避审批权限或预算控制。
+    keywords: [拆分, 化整为零, 规避审批]
+
+  - clause_id: neg-007
+    article: 七
+    text: 不得将项目资金转入个人账户，不得公款私存。
+    keywords: [个人账户, 公款私存]
+
+  - clause_id: neg-008
+    article: 八
+    text: 不得以劳务费、专家咨询费等名义变相发放奖金、津贴、补贴。
+    keywords: [变相发放, 奖金, 津贴]

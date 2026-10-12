@@ -1,0 +1,90 @@
+# 规则库：用途维度
+version: "1.0"
+source: builtin
+dimension: purpose
+tags: [用途, 科目]
+
+rules:
+
+  - id: PUR-001
+    name: 开支内容与预算科目适用范围不符
+    event_types: [reimbursement]
+    condition: 'not is_empty(purpose) and not is_empty(budget_subject) and not (contains_any(purpose, budget_subject) or contains_any(budget_subject, purpose)) and len(budget_subject) >= 3 and len(purpose) >= 4'
+    requirement: 开支内容应当与所列预算科目的适用范围一致。
+    risk_category: deviation
+    level_hint: medium
+    disposition_hint: consult
+    suggestion: 对照项目预算书核对科目适用范围；列支科目确有误的，应办理科目调整。
+    weight: 1.2
+    basis:
+      - doc_title: 国家自然科学基金资助项目资金管理办法
+        doc_no: 财教〔2021〕177 号
+        article: 第十九条
+        text: 项目资金应当用于资助项目研究工作，按照批准的预算科目和开支范围使用。
+      - doc_title: 国务院办公厅关于改革完善中央财政科研经费管理的若干意见
+        doc_no: 国办发〔2021〕32 号
+        text: 项目资金使用应当符合项目预算和开支范围要求。
+
+  - id: PUR-002
+    name: 存在违规列支情形的表述
+    event_types: [reimbursement]
+    condition: 'contains_any(text, "虚开发票", "虚假合同", "虚构事项", "虚报冒领", "违规列支", "套取资金")'
+    requirement: 严禁以虚假票据、虚构事项、虚报人员等方式套取科研经费。
+    risk_category: deviation
+    level_hint: high
+    disposition_hint: restrict
+    suggestion: 立即核实材料真实性，暂缓办理；必要时移交相关部门核查。
+    weight: 2.0
+    basis:
+      - doc_title: 国务院办公厅关于改革完善中央财政科研经费管理的若干意见
+        doc_no: 国办发〔2021〕32 号
+        text: 严禁编报虚假预算、签订虚假合同、报销虚假票据、虚构事项、虚报人员等行为。
+      - doc_title: 国家自然科学基金资助项目资金管理办法
+        doc_no: 财教〔2021〕177 号
+        text: 禁止以任何方式套取、挪用项目资金。
+
+  - id: PUR-003
+    name: 列支与科研活动无关的支出
+    event_types: [reimbursement]
+    condition: 'contains_any(purpose, "家庭消费", "个人消费", "礼品", "烟酒", "旅游", "健身", "物业", "房租")'
+    requirement: 项目资金不得用于与科研活动无关的支出。
+    risk_category: deviation
+    level_hint: high
+    disposition_hint: return
+    suggestion: 核实该支出的科研必要性；与项目研究无关的，应予退回。
+    weight: 1.6
+    basis:
+      - doc_title: 国家自然科学基金资助项目资金管理办法
+        doc_no: 财教〔2021〕177 号
+        article: 第二十四条
+        text: 项目资金不得用于与本项目研究无关的支出。
+
+  - id: PUR-004
+    name: 用途表述模糊无法判断
+    event_types: [reimbursement]
+    condition: 'is_empty(purpose) or len(purpose) < 4'
+    requirement: 报销事由应表述清晰，能够判断支出性质与科研活动的关联性。
+    risk_category: missing
+    level_hint: medium
+    disposition_hint: supplement
+    suggestion: 要求经办人补充具体开支内容说明。
+    weight: 0.9
+    basis:
+      - doc_title: 中华人民共和国会计法
+        article: 第十四条
+        text: 会计凭证应当载明经济业务事项的内容、数量、金额等，内容必须真实、完整。
+
+  - id: PUR-005
+    name: 劳务费发放缺少签收或身份信息
+    event_types: [reimbursement]
+    condition: 'contains_any(text, "劳务费", "咨询费", "评审费") and not contains_any(text, "签收", "身份证", "银行卡号", "个人所得税")'
+    requirement: 劳务费、咨询费等人员费用应当留存发放对象身份信息与签收记录。
+    risk_category: missing
+    level_hint: medium
+    disposition_hint: supplement
+    suggestion: 补充发放名单、身份信息与签收记录。
+    weight: 1.2
+    basis:
+      - doc_title: 财政部关于进一步加强科学事业单位内部控制建设的指导意见
+        article: 人员费用管理
+        text: 单位应当加强对劳务费、专家咨询费等人员费用的管理，完善发放手续与签收记录。

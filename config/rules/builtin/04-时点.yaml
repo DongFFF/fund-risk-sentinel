@@ -1,0 +1,70 @@
+# 规则库：时点维度
+version: "1.0"
+source: builtin
+dimension: timing
+tags: [时点, 时限]
+
+rules:
+
+  - id: TIM-001
+    name: 业务发生后长期未办理报销
+    event_types: [reimbursement, advance]
+    condition: 'days_after_event > 180'
+    requirement: 经费支出应当在业务发生后及时办理报销，原则上不超过规定时限。
+    risk_category: deviation
+    level_hint: medium
+    disposition_hint: consult
+    suggestion: 说明超期原因；跨年度报销应确认是否影响对应年度的经费执行与决算。
+    weight: 1.1
+    basis:
+      - doc_title: 中华人民共和国会计法
+        article: 第十四条
+        text: 办理经济业务事项必须填制或者取得原始凭证，并及时送交会计机构。
+      - doc_title: 财政部关于进一步加强科学事业单位内部控制建设的指导意见
+        article: 会计核算控制
+        text: 单位应当及时进行会计核算，不得拖延或者跨期核算。
+
+  - id: TIM-002
+    name: 跨年度报销
+    event_types: [reimbursement]
+    condition: 'contains_any(text, "跨年报销", "上年费用", "以前年度", "补报上年")'
+    requirement: 跨年度报销应当履行相应审批程序，并确认对年度决算的影响。
+    risk_category: deviation
+    level_hint: medium
+    disposition_hint: consult
+    suggestion: 核对是否已履行跨年度报销审批，确认财务处理方式。
+    weight: 1.2
+    basis:
+      - doc_title: 中华人民共和国会计法
+        article: 第十一条
+        text: 会计年度自公历 1 月 1 日起至 12 月 31 日止。
+
+  - id: TIM-003
+    name: 项目结题后继续列支
+    event_types: [reimbursement]
+    condition: 'contains_any(text, "已结题", "项目已结项", "结题后支出")'
+    requirement: 项目结题后不得继续列支项目经费，剩余资金应按制度规定处理。
+    risk_category: deviation
+    level_hint: high
+    disposition_hint: restrict
+    suggestion: 核实项目结题时间与支出发生时间；结题后的支出不应在项目经费中列支。
+    weight: 1.7
+    basis:
+      - doc_title: 国家自然科学基金资助项目资金管理办法
+        doc_no: 财教〔2021〕177 号
+        text: 项目完成后，应当及时办理结题和资金结算手续。
+
+  - id: TIM-004
+    name: 非工作日或异常时点办理
+    event_types: [reimbursement]
+    condition: 'regex_match("(周末|节假日|凌晨|深夜)", text) and contains_any(text, "提交", "办理", "审批")'
+    requirement: 异常时点集中办理的业务宜关注其真实性，尤其是大额或频繁发生的支出。
+    risk_category: anomaly
+    level_hint: low
+    disposition_hint: consult
+    suggestion: 结合业务实际判断是否存在异常；正常科研活动在非工作日办理属合理情形，不必过虑。
+    weight: 0.5
+    basis:
+      - doc_title: 财政部关于进一步加强科学事业单位内部控制建设的指导意见
+        article: 风险识别与评估
+        text: 单位应当结合业务特点识别风险点，并根据风险发生的可能性与影响程度确定应对策略。
