@@ -109,6 +109,9 @@ python run.py
 # 命令行冒烟测试（不联网，走内置 mock 模型，验证全链路）
 python scripts/smoke_test.py
 
+# 界面无头冒烟测试（不弹窗，验证 7 个页面能否构造与刷新）
+python scripts/ui_smoke_test.py
+
 # 用真实模型跑一份样例材料
 python examples/run_review_demo.py --file examples/样例-差旅报销单.txt
 ```
@@ -174,7 +177,7 @@ fund-risk-sentinel/
 | 存储层与审计日志 | ✅ 已完成（哈希链防篡改） |
 | 六维评测模块 | ✅ 已完成 |
 | 桌面界面（PySide6） | ✅ 已完成（7 个页面） |
-| 自动化测试 | ✅ 144 项 pytest + 35 项离线冒烟，全部通过 |
+| 自动化测试 | ✅ 158 项 pytest + 35 项离线冒烟 + 17 项界面冒烟，全部通过 |
 | exe 打包 | 🔧 打包脚本已就绪，待实机验证 |
 | 标准化数据集 | ⏳ 待建（当前所有数据先经大模型审查，逐步沉淀为标注语料） |
 

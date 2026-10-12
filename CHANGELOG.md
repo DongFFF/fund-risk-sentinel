@@ -38,7 +38,7 @@
 - **桌面界面**：PySide6 主窗口 + 7 个功能页面
   （概览 / 材料上传 / 风险审查 / 规则库 / 知识库 / 能力评测 / 设置）
 - **打包**：PyInstaller 单文件 exe 构建脚本
-- **自动化测试**：144 项 pytest + 35 项离线冒烟测试，全程不联网
+- **自动化测试**：158 项 pytest + 35 项离线冒烟 + 17 项界面冒烟测试，全程不联网
 
 [Unreleased]: https://github.com/<your-name>/fund-risk-sentinel/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/<your-name>/fund-risk-sentinel/releases/tag/v0.1.0

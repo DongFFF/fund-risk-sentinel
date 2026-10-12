@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
 from ..core.enums import AdaptationPath
 from ..core.exceptions import ConfigError, ProviderNotConfiguredError
@@ -94,6 +94,20 @@ class ProviderConfig(Base):
     description: str = ""
     #: 是否为本地部署（本地模型不触发"数据外发"提示）
     is_local: bool = False
+
+    @model_validator(mode="after")
+    def _force_local_for_offline_types(self) -> "ProviderConfig":
+        """离线协议一律视为本地部署。
+
+        ``mock`` 根本不联网，若因漏写 ``is_local: true`` 而在界面上被标成
+        「云端」，会让人误判材料是否外发——这是安全提示，不能靠配置写对来保证。
+
+        直接写 ``__dict__``：本模型开启了 ``validate_assignment``，
+        走常规赋值会重新触发本校验器，导致无限递归。
+        """
+        if self.type == "mock":
+            self.__dict__["is_local"] = True
+        return self
 
     @property
     def display_name(self) -> str:
