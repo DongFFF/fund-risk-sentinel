@@ -67,7 +67,7 @@
 - Python 3.11+
 
 ```bash
-git clone https://github.com/<your-name>/fund-risk-sentinel.git
+git clone https://github.com/DongFFF/fund-risk-sentinel.git
 cd fund-risk-sentinel
 
 python -m venv .venv

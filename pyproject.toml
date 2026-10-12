@@ -42,8 +42,8 @@ dev = ["pyinstaller>=6.5", "pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.4", "mypy>
 fund-risk-sentinel = "fund_risk_sentinel.app:main"
 
 [project.urls]
-Homepage = "https://github.com/<your-name>/fund-risk-sentinel"
-Issues = "https://github.com/<your-name>/fund-risk-sentinel/issues"
+Homepage = "https://github.com/DongFFF/fund-risk-sentinel"
+Issues = "https://github.com/DongFFF/fund-risk-sentinel/issues"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
